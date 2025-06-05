@@ -1,0 +1,264 @@
+<?php
+// dashboard.php
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ASHURA TOOL - Phone Info Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --primary: #ff0000;
+      --bg: #111;
+      --card-bg: #222;
+      --text: #eee;
+      --muted: #aaa;
+    }
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .topbar {
+      background: #1a1a1a;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .menu-icon {
+      font-size: 24px;
+      color: var(--primary);
+      cursor: pointer;
+    }
+    .topbar h1 {
+      font-size: 20px;
+      color: var(--primary);
+    }
+    .container {
+      display: flex;
+    }
+    .sidebar {
+      width: 220px;
+      background: #1a1a1a;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      transform: translateX(-100%);
+      transition: 0.3s;
+      z-index: 999;
+    }
+    .sidebar.active {
+      transform: translateX(0);
+    }
+    .sidebar h2 {
+      color: var(--primary);
+      margin-bottom: 30px;
+    }
+    .sidebar ul {
+      list-style: none;
+    }
+    .sidebar ul li {
+      margin: 20px 0;
+    }
+    .sidebar ul li a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .close-btn {
+      font-size: 22px;
+      color: var(--muted);
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      cursor: pointer;
+    }
+    .main {
+      flex: 1;
+      margin-left: 0;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      padding: 12px;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .loading {
+      color: var(--muted);
+      margin-top: 20px;
+      font-style: italic;
+    }
+    .result {
+      margin-top: 30px;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+    }
+    .result h2 {
+      margin-bottom: 15px;
+    }
+    .result p {
+      margin: 10px 0;
+    }
+    @media (min-width: 768px) {
+      .sidebar {
+        transform: translateX(0);
+      }
+      .main {
+        margin-left: 220px;
+      }
+      .menu-icon { display: none; }
+      .close-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+  <h1>ASHURA TOOL</h1>
+</div>
+
+<div class="container">
+  <div class="sidebar" id="sidebar">
+    <div class="close-btn" onclick="toggleSidebar()">✖</div>
+    <h2>Menu</h2>
+    <ul>
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#">Phone Lookup</a></li>
+      <li><a href="#">Logs</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <h2>Phone Number Info Tool</h2>
+    <form id="lookupForm">
+      <div class="form-group">
+        <label for="phone">Enter Phone Number:</label><br><br>
+        <input type="text" id="phone" placeholder="+91XXXXXXXXXX" required />
+      </div>
+      <button type="submit">Get Info</button>
+    </form>
+
+    <div id="loading" class="loading" style="display:none;">Fetching data...</div>
+
+    <div class="result" id="resultBox" style="display: none;">
+      <h2>Phone Number Details</h2>
+      <p><strong>Valid:</strong> <span id="valid"></span></p>
+      <p><strong>Number:</strong> <span id="number"></span></p>
+      <p><strong>Country:</strong> <span id="country"></span></p>
+      <p><strong>Location:</strong> <span id="location"></span></p>
+      <p><strong>Carrier:</strong> <span id="carrier"></span></p>
+      <p><strong>Line Type:</strong> <span id="line_type"></span></p>
+      <p><strong>SIM Holder Name:</strong> <span id="name"></span></p>
+      <p><strong>IP Address:</strong> <span id="ip"></span></p>
+      <p><strong>SIM Type:</strong> <span id="sim_type"></span></p>
+      <p><strong>Current Address:</strong> <span id="current_address"></span></p>
+      <p><strong>Geo Location:</strong> <span id="geo_location"></span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const apiKey = 'b9972c3f9120d77e23b79f5ca5b02ad8';
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+  }
+
+  function getRandomName() {
+    const names = ["Rahul Verma", "Sneha Gupta", "Amit Kumar", "Priya Singh", "Karan Patel", "Anjali Mehta"];
+    return names[Math.floor(Math.random() * names.length)];
+  }
+
+  function getRandomIP() {
+    const part = () => Math.floor(Math.random() * 255);
+    return `49.${part()}.${part()}.${part()}`; // India-based IP block simulation
+  }
+
+  function getRandomSIMType() {
+    const types = ["4G", "5G", "VoLTE", "eSIM"];
+    return types[Math.floor(Math.random() * types.length)];
+  }
+
+  function getRandomAddress() {
+    const cities = [
+      "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Ahmedabad",
+      "Chennai", "Kolkata", "Pune", "Surat", "Jaipur",
+      "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane"
+    ];
+    const localities = [
+      "MG Road", "Sector 18", "Bandra West", "Andheri East", "Koramangala",
+      "Salt Lake", "MG Marg", "Jayanagar", "Electronic City", "Rajouri Garden",
+      "Jubilee Hills", "Shivajinagar", "Vasundhara", "Alkapuri", "Mira Road"
+    ];
+    const city = cities[Math.floor(Math.random() * cities.length)];
+    const locality = localities[Math.floor(Math.random() * localities.length)];
+    return `${locality}, ${city}, India`;
+  }
+
+  function getRandomGeo() {
+    // India's approx lat: 8° to 37°, lon: 68° to 97°
+    const lat = (Math.random() * (37 - 8) + 8).toFixed(5);
+    const lon = (Math.random() * (97 - 68) + 68).toFixed(5);
+    return `${lat}, ${lon}`;
+  }
+
+  document.getElementById('lookupForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const phone = document.getElementById('phone').value.trim();
+    const resultBox = document.getElementById('resultBox');
+    const loading = document.getElementById('loading');
+
+    resultBox.style.display = 'none';
+    loading.style.display = 'block';
+
+    fetch(`http://apilayer.net/api/validate?access_key=${apiKey}&number=${encodeURIComponent(phone)}&country_code=&format=1`)
+      .then(res => res.json())
+      .then(data => {
+        loading.style.display = 'none';
+        resultBox.style.display = 'block';
+
+        document.getElementById('valid').textContent = data.valid ? 'Yes ✅' : 'No ❌';
+        document.getElementById('number').textContent = data.international_format || 'N/A';
+        document.getElementById('country').textContent = data.country_name || 'N/A';
+        document.getElementById('location').textContent = data.location || 'N/A';
+        document.getElementById('carrier').textContent = data.carrier || 'N/A';
+        document.getElementById('line_type').textContent = data.line_type || 'N/A';
+
+        // Fake data
+        document.getElementById('name').textContent = getRandomName();
+        document.getElementById('ip').textContent = getRandomIP();
+        document.getElementById('sim_type').textContent = getRandomSIMType();
+        document.getElementById('current_address').textContent = getRandomAddress();
+        document.getElementById('geo_location').textContent = getRandomGeo();
+      })
+      .catch(err => {
+        loading.style.display = 'none';
+        alert("Error fetching data. Please check your network or API key.");
+      });
+  });
+</script>
+
+</body>
+</html>

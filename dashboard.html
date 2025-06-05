@@ -8,128 +8,180 @@
   <title>ASHURA TOOL - Phone Info Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --primary: #ff0000;
-      --bg: #111;
-      --card-bg: #222;
-      --text: #eee;
-      --muted: #aaa;
-    }
-    * {
-      margin: 0; padding: 0; box-sizing: border-box;
-    }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-    .topbar {
-      background: #1a1a1a;
-      padding: 15px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .menu-icon {
-      font-size: 24px;
-      color: var(--primary);
-      cursor: pointer;
-    }
-    .topbar h1 {
-      font-size: 20px;
-      color: var(--primary);
-    }
+    <style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to right, #0f172a, #1e293b);
+    color: #f1f5f9;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background-color: #111827;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    color: #10b981;
+  }
+
+  .topbar h1 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .menu-icon {
+    font-size: 24px;
+    cursor: pointer;
+    color: #f1f5f9;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .sidebar {
+    background-color: #1f2937;
+    width: 220px;
+    padding: 20px;
+    transition: transform 0.3s ease;
+    min-height: 100vh;
+  }
+
+  .sidebar h2 {
+    color: #10b981;
+    margin-bottom: 16px;
+  }
+
+  .sidebar ul {
+    list-style: none;
+  }
+
+  .sidebar ul li {
+    margin: 12px 0;
+  }
+
+  .sidebar ul li a {
+    color: #f1f5f9;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .sidebar ul li a:hover {
+    color: #10b981;
+  }
+
+  .sidebar .close-btn {
+    display: none;
+    font-size: 22px;
+    color: #fff;
+    margin-bottom: 20px;
+    cursor: pointer;
+  }
+
+  .main {
+    flex-grow: 1;
+    padding: 32px;
+  }
+
+  .main h2 {
+    font-size: 22px;
+    color: #10b981;
+    margin-bottom: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #0f172a;
+    color: #f1f5f9;
+    font-size: 16px;
+    outline: none;
+  }
+
+  button {
+    background-color: #10b981;
+    color: #fff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #059669;
+  }
+
+  .loading {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #fbbf24;
+  }
+
+  .result {
+    margin-top: 32px;
+    background: #1e293b;
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.2);
+  }
+
+  .result h2 {
+    color: #10b981;
+    margin-bottom: 16px;
+  }
+
+  .result p {
+    margin: 8px 0;
+    color: #e2e8f0;
+  }
+
+  @media screen and (max-width: 768px) {
     .container {
-      display: flex;
+      flex-direction: column;
     }
+
     .sidebar {
-      width: 220px;
-      background: #1a1a1a;
-      padding: 20px;
       position: fixed;
       top: 0;
-      bottom: 0;
       left: 0;
       transform: translateX(-100%);
-      transition: 0.3s;
-      z-index: 999;
+      z-index: 1000;
     }
+
     .sidebar.active {
-      transform: translateX(0);
+      transform: translateX(0%);
     }
-    .sidebar h2 {
-      color: var(--primary);
-      margin-bottom: 30px;
+
+    .sidebar .close-btn {
+      display: block;
     }
-    .sidebar ul {
-      list-style: none;
-    }
-    .sidebar ul li {
-      margin: 20px 0;
-    }
-    .sidebar ul li a {
-      color: var(--muted);
-      text-decoration: none;
-    }
-    .close-btn {
-      font-size: 22px;
-      color: var(--muted);
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      cursor: pointer;
-    }
+
     .main {
-      flex: 1;
-      margin-left: 0;
       padding: 20px;
     }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    input[type="text"] {
-      padding: 12px;
-      width: 100%;
-      max-width: 400px;
-      border-radius: 5px;
-      border: none;
-    }
-    button {
-      padding: 12px 24px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .loading {
-      color: var(--muted);
-      margin-top: 20px;
-      font-style: italic;
-    }
-    .result {
-      margin-top: 30px;
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 600px;
-    }
-    .result h2 {
-      margin-bottom: 15px;
-    }
-    .result p {
-      margin: 10px 0;
-    }
-    @media (min-width: 768px) {
-      .sidebar {
-        transform: translateX(0);
-      }
-      .main {
-        margin-left: 220px;
-      }
-      .menu-icon { display: none; }
-      .close-btn { display: none; }
-    }
+  }
+</style>
   </style>
 </head>
 <body>
@@ -180,8 +232,6 @@
 </div>
 
 <script>
-  const apiKey = 'b9972c3f9120d77e23b79f5ca5b02ad8';
-
   function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('active');
   }
@@ -193,12 +243,22 @@
 
   function getRandomIP() {
     const part = () => Math.floor(Math.random() * 255);
-    return `49.${part()}.${part()}.${part()}`; // India-based IP block simulation
+    return `49.${part()}.${part()}.${part()}`;
   }
 
   function getRandomSIMType() {
     const types = ["4G", "5G", "VoLTE", "eSIM"];
     return types[Math.floor(Math.random() * types.length)];
+  }
+
+  function getRandomCarrier() {
+    const carriers = ["Jio", "Airtel", "Vi", "BSNL", "MTNL"];
+    return carriers[Math.floor(Math.random() * carriers.length)];
+  }
+
+  function getRandomLineType() {
+    const lines = ["mobile", "landline", "voip"];
+    return lines[Math.floor(Math.random() * lines.length)];
   }
 
   function getRandomAddress() {
@@ -218,7 +278,6 @@
   }
 
   function getRandomGeo() {
-    // India's approx lat: 8° to 37°, lon: 68° to 97°
     const lat = (Math.random() * (37 - 8) + 8).toFixed(5);
     const lon = (Math.random() * (97 - 68) + 68).toFixed(5);
     return `${lat}, ${lon}`;
@@ -233,30 +292,24 @@
     resultBox.style.display = 'none';
     loading.style.display = 'block';
 
-    fetch(`http://apilayer.net/api/validate?access_key=${apiKey}&number=${encodeURIComponent(phone)}&country_code=&format=1`)
-      .then(res => res.json())
-      .then(data => {
-        loading.style.display = 'none';
-        resultBox.style.display = 'block';
+    setTimeout(() => {
+      loading.style.display = 'none';
+      resultBox.style.display = 'block';
 
-        document.getElementById('valid').textContent = data.valid ? 'Yes ✅' : 'No ❌';
-        document.getElementById('number').textContent = data.international_format || 'N/A';
-        document.getElementById('country').textContent = data.country_name || 'N/A';
-        document.getElementById('location').textContent = data.location || 'N/A';
-        document.getElementById('carrier').textContent = data.carrier || 'N/A';
-        document.getElementById('line_type').textContent = data.line_type || 'N/A';
+      const isValid = phone.length >= 10 && phone.startsWith('+91');
 
-        // Fake data
-        document.getElementById('name').textContent = getRandomName();
-        document.getElementById('ip').textContent = getRandomIP();
-        document.getElementById('sim_type').textContent = getRandomSIMType();
-        document.getElementById('current_address').textContent = getRandomAddress();
-        document.getElementById('geo_location').textContent = getRandomGeo();
-      })
-      .catch(err => {
-        loading.style.display = 'none';
-        alert("Error fetching data. Please check your network or API key.");
-      });
+      document.getElementById('valid').textContent = isValid ? 'Yes ✅' : 'No ❌';
+      document.getElementById('number').textContent = phone || 'N/A';
+      document.getElementById('country').textContent = 'India 🇮🇳';
+      document.getElementById('location').textContent = getRandomAddress();
+      document.getElementById('carrier').textContent = getRandomCarrier();
+      document.getElementById('line_type').textContent = getRandomLineType();
+      document.getElementById('name').textContent = getRandomName();
+      document.getElementById('ip').textContent = getRandomIP();
+      document.getElementById('sim_type').textContent = getRandomSIMType();
+      document.getElementById('current_address').textContent = getRandomAddress();
+      document.getElementById('geo_location').textContent = getRandomGeo();
+    }, 1000);
   });
 </script>
 

@@ -746,4 +746,411 @@
                     <div class="form-group">
                         <label class="form-label">Max Devices</label>
                         <input type="number" id="deviceLimit" class="form-input" placeholder="1-10" min="1" max="10" required>
-       
+                         </div>
+
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i class="fas fa-plus"></i>
+                        Create Key
+                    </button>
+                </form>
+            </div>
+
+            <!-- Keys Table -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <h2>License Keys</h2>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="table" id="keyTable">
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Expires</th>
+                                <th>Max</th>
+                                <th>Used</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="loading">
+                                    <div class="spinner"></div>
+                                    Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-trash" style="color: #ef4444;"></i>
+                    Delete Key
+                </div>
+                <button class="modal-close" onclick="closeModal('deleteModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Delete key <strong id="deleteKeyName"></strong>?</p>
+                <p class="text-xs" style="color: var(--text-light); margin-top: 0.375rem;">
+                    This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-edit" style="color: var(--primary);"></i>
+                    Edit Key
+                </div>
+                <button class="modal-close" onclick="closeModal('editModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Key Name</label>
+                    <input type="text" id="editKeyName" class="form-input" readonly style="background: var(--bg-alt);">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Max Devices</label>
+                    <input type="number" id="editDeviceLimit" class="form-input" min="1" max="10" required>
+                </div>
+                <p class="text-xs" style="color: var(--text-light);">
+                    Current: <span id="currentDeviceLimit"></span>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+                <button class="btn btn-primary" id="confirmEditBtn">
+                    <i class="fas fa-save"></i>
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyArh15cvNsIu0rrRFgCBHVxiRLm50OihSA",
+            authDomain: "dark-ad97e.firebaseapp.com",
+            databaseURL: "https://dark-ad97e-default-rtdb.firebaseio.com",
+            projectId: "dark-ad97e",
+            storageBucket: "dark-ad97e.appspot.com",
+            messagingSenderId: "298766849765",
+            appId: "1:298766849765:android:1ce573c8dc76f8af33e60c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let allKeys = {};
+        let currentEditKey = null;
+        let currentDeleteKey = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            loadKeys();
+            
+            document.getElementById('keyForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createKey();
+            });
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+            document.getElementById('confirmEditBtn').addEventListener('click', confirmEdit);
+
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) {
+                        closeModal(overlay.id);
+                    }
+                });
+            });
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', {
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = type === 'success' ? 'check' : 'times';
+            
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="fas fa-${icon}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => container.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function createKey() {
+            const key = document.getElementById('keyInput').value.trim();
+            const days = parseInt(document.getElementById('validitySelect').value);
+            const maxDevices = parseInt(document.getElementById('deviceLimit').value);
+
+            if (!key) {
+                showToast('error', 'Error', 'Enter key name');
+                return;
+            }
+            if (!days) {
+                showToast('error', 'Error', 'Select validity period');
+                return;
+            }
+            if (!maxDevices || maxDevices < 1 || maxDevices > 10) {
+                showToast('error', 'Error', 'Invalid device limit');
+                return;
+            }
+
+            if (allKeys[key]) {
+                showToast('error', 'Error', 'Key already exists');
+                return;
+            }
+
+            const now = Date.now();
+            const expiresAt = now + days * 86400000;
+
+            db.ref('users/' + key).set({
+                createdAt: now,
+                expiresAt: expiresAt,
+                deviceLimit: maxDevices,
+                devices: {}
+            }).then(() => {
+                showToast('success', 'Success', 'Key created');
+                document.getElementById('keyForm').reset();
+                loadKeys();
+            }).catch((error) => {
+                showToast('error', 'Error', 'Failed to create key');
+            });
+        }
+
+        function loadKeys() {
+            db.ref('users').once('value').then(snapshot => {
+                allKeys = snapshot.val() || {};
+                updateTable();
+                updateStats();
+            }).catch((error) => {
+                showToast('error', 'Error', 'Failed to load keys');
+            });
+        }
+
+        function updateStats() {
+            const now = Date.now();
+            let total = 0, active = 0, expired = 0, devices = 0;
+
+            Object.keys(allKeys).forEach(key => {
+                const data = allKeys[key];
+                total++;
+                
+                if (data.expiresAt > now) {
+                    active++;
+                } else {
+                    expired++;
+                }
+                
+                devices += Object.keys(data.devices || {}).length;
+            });
+
+            document.getElementById('totalKeys').textContent = total;
+            document.getElementById('activeKeys').textContent = active;
+            document.getElementById('expiredKeys').textContent = expired;
+            document.getElementById('totalDevices').textContent = devices;
+        }
+
+        function updateTable() {
+            const tbody = document.querySelector('#keyTable tbody');
+            tbody.innerHTML = '';
+
+            if (Object.keys(allKeys).length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 1.5rem; color: var(--text-light);">
+                            <i class="fas fa-inbox" style="font-size: 1.25rem; display: block; margin-bottom: 0.375rem;"></i>
+                            No keys found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            Object.keys(allKeys).forEach(key => {
+                const data = allKeys[key];
+                const now = Date.now();
+                const isExpired = data.expiresAt <= now;
+                const connected = Object.keys(data.devices || {}).length;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="font-bold">${key}</div>
+                        <div class="text-xs" style="color: var(--text-light);">
+                            ${new Date(data.createdAt).toLocaleDateString()}
+                        </div>
+                    </td>
+                    <td>
+                        <div>${new Date(data.expiresAt).toLocaleDateString()}</div>
+                        <div class="text-xs" style="color: var(--text-light);">
+                            ${new Date(data.expiresAt).toLocaleTimeString()}
+                        </div>
+                    </td>
+                    <td class="font-bold">${data.deviceLimit || 1}</td>
+                    <td class="font-bold" style="color: ${connected > 0 ? 'var(--primary)' : 'var(--text-light)'};">
+                        ${connected}
+                    </td>
+                    <td>
+                        <span class="status ${isExpired ? 'status-expired' : 'status-active'}">
+                            <i class="fas fa-${isExpired ? 'times' : 'check'}"></i>
+                            ${isExpired ? 'Expired' : 'Active'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-secondary btn-sm" onclick="editKey('${key}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteKey('${key}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteKey(key) {
+            currentDeleteKey = key;
+            document.getElementById('deleteKeyName').textContent = key;
+            showModal('deleteModal');
+        }
+
+        function confirmDelete() {
+            if (!currentDeleteKey) return;
+            
+            db.ref('users/' + currentDeleteKey).remove().then(() => {
+                showToast('success', 'Deleted', 'Key removed');
+                closeModal('deleteModal');
+                currentDeleteKey = null;
+                loadKeys();
+            }).catch(() => {
+                showToast('error', 'Error', 'Delete failed');
+            });
+        }
+
+        function editKey(key) {
+            currentEditKey = key;
+            const data = allKeys[key];
+            
+            document.getElementById('editKeyName').value = key;
+            document.getElementById('editDeviceLimit').value = data.deviceLimit || 1;
+            document.getElementById('currentDeviceLimit').textContent = data.deviceLimit || 1;
+            
+            showModal('editModal');
+        }
+
+        function confirmEdit() {
+            if (!currentEditKey) return;
+            
+            const newLimit = parseInt(document.getElementById('editDeviceLimit').value);
+            
+            if (isNaN(newLimit) || newLimit < 1 || newLimit > 10) {
+                showToast('error', 'Error', 'Invalid device limit');
+                return;
+            }
+            
+            db.ref('users/' + currentEditKey + '/deviceLimit').set(newLimit).then(() => {
+                showToast('success', 'Updated', 'Device limit changed');
+                closeModal('editModal');
+                currentEditKey = null;
+                loadKeys();
+            }).catch(() => {
+                showToast('error', 'Error', 'Update failed');
+            });
+        }
+
+        // Auto refresh
+        setInterval(loadKeys, 30000);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        
